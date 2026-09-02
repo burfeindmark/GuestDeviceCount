@@ -1,0 +1,58 @@
+name: Build Debian package (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag for the .deb (e.g. v1.0.2)'
+        required: true
+        default: 'v1.0.2'
+
+jobs:
+  build_deb:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Prepare package layout
+      run: |
+        set -e
+        PKGDIR=package
+        rm -rf $PKGDIR
+        mkdir -p $PKGDIR/opt/guest-device-counter
+        rsync -a --exclude='.git' . $PKGDIR/opt/guest-device-counter/
+        VERSION=${{ github.event.inputs.version }}
+        mkdir -p $PKGDIR/DEBIAN
+        cat > $PKGDIR/DEBIAN/control <<EOF
+Package: guest-device-counter
+Version: ${VERSION}
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: GitHub Actions <actions@github.com>
+Description: Guest Device Counter for venue guest networks
+ A service that scans the guest network, records device activity, and
+ generates PDF analytics reports.
+EOF
+        chmod -R 755 $PKGDIR/opt/guest-device-counter
+
+    - name: Install packaging tools
+      run: |
+        set -e
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends dpkg-dev rsync
+
+    - name: Build .deb
+      run: |
+        set -e
+        dpkg-deb --build package
+        mv package.deb guest-device-counter_${{ github.event.inputs.version }}_all.deb
+        ls -lh guest-device-counter_${{ github.event.inputs.version }}_all.deb
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: guest-device-counter-deb
+        path: guest-device-counter_${{ github.event.inputs.version }}_all.deb
