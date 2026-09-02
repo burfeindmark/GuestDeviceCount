@@ -34,6 +34,12 @@ Description: Guest Device Counter for venue guest networks
 EOF
         chmod -R 755 $PKGDIR/opt/guest-device-counter
 
+    - name: Install packaging tools
+      run: |
+        set -e
+        apt-get update
+        apt-get install -y --no-install-recommends dpkg-dev rsync
+
     - name: Build .deb
       run: |
         set -e
