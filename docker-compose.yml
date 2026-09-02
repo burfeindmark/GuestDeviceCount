@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  guest-device-counter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: guest-device-counter
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - gdc-data:/var/lib/guest-device-counter
+      - gdc-logs:/var/log/guest-device-counter
+      - ./config.yml:/etc/guest-device-counter/config.yml:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.example.description=Guest Device Counter Service"
+
+volumes:
+  gdc-data:
+    driver: local
+  gdc-logs:
+    driver: local
