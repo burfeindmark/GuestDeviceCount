@@ -1,9 +1,12 @@
-name: Build Debian package on release
+name: Build Debian package (manual)
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag for the .deb (e.g. v1.0.2)'
+        required: true
+        default: 'v1.0.2'
 
 jobs:
   build_deb:
@@ -20,7 +23,7 @@ jobs:
         rm -rf $PKGDIR
         mkdir -p $PKGDIR/opt/guest-device-counter
         rsync -a --exclude='.git' . $PKGDIR/opt/guest-device-counter/
-        VERSION=${{ github.event.release.tag_name }}
+        VERSION=${{ github.event.inputs.version }}
         mkdir -p $PKGDIR/DEBIAN
         cat > $PKGDIR/DEBIAN/control <<EOF
 Package: guest-device-counter
@@ -28,7 +31,7 @@ Version: ${VERSION}
 Section: utils
 Priority: optional
 Architecture: all
-Maintainer: ${GITHUB_ACTOR} <${GITHUB_ACTOR}@users.noreply.github.com>
+Maintainer: GitHub Actions <actions@github.com>
 Description: Guest Device Counter for venue guest networks
  A service that scans the guest network, records device activity, and
  generates PDF analytics reports.
@@ -38,20 +41,18 @@ EOF
     - name: Install packaging tools
       run: |
         set -e
-        apt-get update
-        apt-get install -y --no-install-recommends dpkg-dev rsync
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends dpkg-dev rsync
 
     - name: Build .deb
       run: |
         set -e
         dpkg-deb --build package
-        mv package.deb guest-device-counter_${{ github.event.release.tag_name }}_all.deb
-        ls -lh guest-device-counter_${{ github.event.release.tag_name }}_all.deb
+        mv package.deb guest-device-counter_${{ github.event.inputs.version }}_all.deb
+        ls -lh guest-device-counter_${{ github.event.inputs.version }}_all.deb
 
-    - name: Upload release asset
-      uses: softprops/action-upload-release-asset@v1
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./guest-device-counter_${{ github.event.release.tag_name }}_all.deb
-        asset_name: guest-device-counter_${{ github.event.release.tag_name }}_all.deb
-        asset_content_type: application/vnd.debian.binary-package
+        name: guest-device-counter-deb
+        path: guest-device-counter_${{ github.event.inputs.version }}_all.deb
