@@ -36,6 +36,21 @@ Description: Guest Device Counter for venue guest networks
  A service that scans the guest network, records device activity, and
  generates PDF analytics reports.
 EOF
+        # Add a postinst script to perform final install steps when the package is installed
+        cat > $PKGDIR/DEBIAN/postinst <<'POSTINST'
+#!/bin/bash
+set -e
+# Run bundled installer if present (already installed to /opt by the package)
+if [ -x /opt/guest-device-counter/install.sh ]; then
+  /bin/bash /opt/guest-device-counter/install.sh || true
+fi
+# Reload systemd and enable service if available
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl daemon-reload || true
+  systemctl enable guest-device-counter.service || true
+fi
+POSTINST
+        chmod 755 $PKGDIR/DEBIAN/postinst
         chmod -R 755 $PKGDIR/opt/guest-device-counter
 
     - name: Install packaging tools
