@@ -1,0 +1,50 @@
+name: Build Debian package on release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build_deb:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Prepare package layout
+      run: |
+        set -e
+        PKGDIR=package
+        rm -rf $PKGDIR
+        mkdir -p $PKGDIR/opt/guest-device-counter
+        rsync -a --exclude='.git' . $PKGDIR/opt/guest-device-counter/
+        VERSION=${{ github.event.release.tag_name }}
+        mkdir -p $PKGDIR/DEBIAN
+        cat > $PKGDIR/DEBIAN/control <<EOF
+Package: guest-device-counter
+Version: ${VERSION}
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: ${GITHUB_ACTOR} <${GITHUB_ACTOR}@users.noreply.github.com>
+Description: Guest Device Counter for venue guest networks
+ A service that scans the guest network, records device activity, and
+ generates PDF analytics reports.
+EOF
+        chmod -R 755 $PKGDIR/opt/guest-device-counter
+
+    - name: Build .deb
+      run: |
+        set -e
+        dpkg-deb --build package
+        mv package.deb guest-device-counter_${{ github.event.release.tag_name }}_all.deb
+        ls -lh guest-device-counter_${{ github.event.release.tag_name }}_all.deb
+
+    - name: Upload release asset
+      uses: softprops/action-upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./guest-device-counter_${{ github.event.release.tag_name }}_all.deb
+        asset_name: guest-device-counter_${{ github.event.release.tag_name }}_all.deb
+        asset_content_type: application/vnd.debian.binary-package
