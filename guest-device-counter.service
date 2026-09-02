@@ -1,0 +1,35 @@
+[Unit]
+Description=Guest Device Counter Service
+Documentation=https://github.com/burfeindmark/GuestDeviceCount
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=guest-device-counter
+Group=guest-device-counter
+WorkingDirectory=/opt/guest-device-counter
+
+# Run the service
+ExecStart=/usr/bin/python3 -m guest_device_counter.app -c /etc/guest-device-counter/config.yml
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/guest-device-counter /var/log/guest-device-counter
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Environment
+Environment="PYTHONUNBUFFERED=1"
+
+# Resource limits
+CPUQuota=50%
+MemoryLimit=256M
+
+[Install]
+WantedBy=multi-user.target

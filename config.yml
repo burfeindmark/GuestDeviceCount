@@ -1,0 +1,40 @@
+# Guest Device Counter Configuration
+# Default configuration for Raspberry Pi deployment
+
+# Venue information
+venue_name: "My Venue"
+
+# Network interface to monitor
+# Common values: eth0 (wired), wlan0 (wireless)
+network_interface: "eth0"
+
+# Network range to scan (optional, can use interface detection)
+# Format: 192.168.100.0/24
+network_range: null
+
+# Scan interval in minutes (15 minutes is reasonable)
+scan_interval_minutes: 15
+
+# Number of consecutive days before a device is marked as employee
+employee_threshold_days: 5
+
+# Database location
+database_path: "/var/lib/guest-device-counter/devices.db"
+
+# Reports output directory
+reports_dir: "/var/lib/guest-device-counter/reports"
+
+# Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+log_level: "INFO"
+
+# Report generation settings
+enable_daily_reports: true
+enable_weekly_reports: true
+enable_monthly_reports: true
+
+# Report generation times (24-hour format HH:MM)
+daily_report_time: "09:00"
+weekly_report_day: 0  # 0=Monday, 1=Tuesday, ... 6=Sunday
+weekly_report_time: "09:00"
+monthly_report_day: 1
+monthly_report_time: "09:00"
