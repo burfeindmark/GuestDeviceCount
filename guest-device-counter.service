@@ -10,8 +10,8 @@ User=guest-device-counter
 Group=guest-device-counter
 WorkingDirectory=/opt/guest-device-counter
 
-# Run the service
-ExecStart=/usr/bin/python3 -m guest_device_counter.app -c /etc/guest-device-counter/config.yml
+# Run the service using the bundled virtualenv
+ExecStart=/opt/guest-device-counter/venv/bin/python -m guest_device_counter.app -c /etc/guest-device-counter/config.yml
 
 # Security settings
 NoNewPrivileges=true
